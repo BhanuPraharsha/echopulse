@@ -1,0 +1,7 @@
+__pycache__/ *.pyc .env *.egg-info/
+data/echonet/raw/ data/echonet/processed/
+data/camus/raw/ data/camus/processed/
+*.pth *.pt *.ckpt
+experiments/logs/ wandb/ mlruns/
+.vscode/ .idea/
+vault.key *.pem secrets/
