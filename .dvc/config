@@ -1,0 +1,6 @@
+[core]
+    remote = myremote
+[cache]
+    dir = /run/media/bhanu/Data/echopulse_dvc_cache
+['remote "myremote"']
+    url = s3://echopulse-data/dvc
