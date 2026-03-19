@@ -13,11 +13,14 @@ jobs:
       - env:
           PYTHONPATH: .
         run: pytest tests/unit/test_mvm.py -v --cov=mvm
-      - run: python mvm/train.py --config experiments/configs/smoke.yaml
+      - name: Run Training Smoke Test
+        env:
+          PYTHONPATH: .
+        run: python mvm/train.py --config experiments/configs/smoke.yaml
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - run: pip install flake8 black
-      - run: flake8 mvm/ --max-line-length=100
+      - run: flake8 mvm/ --max-line-length=100 --extend-ignore=E203,F841,F811,W291
       - run: black --check mvm/

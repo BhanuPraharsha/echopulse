@@ -2,23 +2,26 @@ import torch
 import torch.nn as nn
 from einops import rearrange
 
-
-'''
+"""
     B-> batch size(how many videos processed simultaneously)
     T-> time 
     C->colour channels(1 here (greyscale))
-'''
+"""
 
 
-class PatchEmbed(nn.Module): # helper module
+class PatchEmbed(nn.Module):  # helper module
     def __init__(self, img_size=112, patch_size=16, in_chans=1, embed_dim=768):
         super().__init__()
-        self.proj = nn.Conv2d(in_chans, embed_dim, patch_size, patch_size) #(B*T, 1, 112, 112)  →  (B*T, 768, 7, 7)
+        self.proj = nn.Conv2d(
+            in_chans, embed_dim, patch_size, patch_size
+        )  # (B*T, 1, 112, 112)  →  (B*T, 768, 7, 7)
 
-        self.n_patches = (img_size // patch_size) ** 2 # number of patches
+        self.n_patches = (img_size // patch_size) ** 2  # number of patches
 
     def forward(self, x):  # (B*T, C, H, W)
-        return rearrange(self.proj(x), 'bt e h w -> bt (h w) e') # runs the conv layer and rearranges the output
+        return rearrange(
+            self.proj(x), "bt e h w -> bt (h w) e"
+        )  # runs the conv layer and rearranges the output
 
 
 class CardiacTransformerEncoder(nn.Module):
@@ -29,15 +32,17 @@ class CardiacTransformerEncoder(nn.Module):
       3. Temporal: learnable temporal positional embedding
     """
 
-    def __init__(self,
-                 img_size=112,
-                 patch_size=16,
-                 in_chans=1,
-                 embed_dim=768,
-                 depth=12,
-                 num_heads=12,
-                 mlp_ratio=4.0,
-                 max_frames=64):
+    def __init__(
+        self,
+        img_size=112,
+        patch_size=16,
+        in_chans=1,
+        embed_dim=768,
+        depth=12,
+        num_heads=12,
+        mlp_ratio=4.0,
+        max_frames=64,
+    ):
         super().__init__()
 
         self.embed_dim = embed_dim
@@ -61,15 +66,13 @@ class CardiacTransformerEncoder(nn.Module):
             nhead=num_heads,
             dim_feedforward=int(embed_dim * mlp_ratio),
             dropout=0.1,
-            activation='gelu',
+            activation="gelu",
             batch_first=True,
-            norm_first=True
+            norm_first=True,
         )
 
         self.transformer = nn.TransformerEncoder(
-            enc_layer,
-            depth,
-            enable_nested_tensor=False
+            enc_layer, depth, enable_nested_tensor=False
         )
 
         self.norm = nn.LayerNorm(embed_dim)
@@ -81,17 +84,17 @@ class CardiacTransformerEncoder(nn.Module):
         B, T, H, W = x.shape
 
         # Patch embed each frame
-        x_flat = rearrange(x, 'b t h w -> (b t) 1 h w')
+        x_flat = rearrange(x, "b t h w -> (b t) 1 h w")
         tokens = self.patch_embed(x_flat)  # (B*T, P, E)
-        tokens = tokens + self.abs_pos     # add absolute pos
+        tokens = tokens + self.abs_pos  # add absolute pos
 
         # Add cardiac phase embedding (per frame, broadcast to patches)
         ph = self.phase_embed(phase_labels.reshape(-1))  # (B*T, E)
-        tokens = tokens + ph.unsqueeze(1)                # (B*T, P, E)
+        tokens = tokens + ph.unsqueeze(1)  # (B*T, P, E)
 
         # Add temporal embedding
-        tokens = rearrange(tokens, '(b t) p e -> b t p e', b=B)
+        tokens = rearrange(tokens, "(b t) p e -> b t p e", b=B)
         tokens = tokens + self.temp_pos[:, :T, :].unsqueeze(2)
-        tokens = rearrange(tokens, 'b t p e -> b (t p) e')
+        tokens = rearrange(tokens, "b t p e -> b (t p) e")
 
         return self.norm(self.transformer(tokens))

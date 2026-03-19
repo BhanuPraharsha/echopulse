@@ -1,0 +1,23 @@
+run_name: 'smoke_test'
+output_dir: 'experiments/smoke_run'
+epochs: 1
+batch_size: 2
+lr: 1.0e-4
+mask_ratio: 0.50
+alpha: 0.30
+beta: 0.50
+
+encoder:
+  img_size: 112
+  patch_size: 16
+  in_chans: 1
+  embed_dim: 192
+  depth: 2
+  num_heads: 3
+  max_frames: 16
+
+decoder:
+  embed_dim: 192
+  n_patches: 49
+  patch_pixels: 256
+  n_phases: 2
