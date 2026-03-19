@@ -1,0 +1,26 @@
+name: MVM CI
+on:
+  push:
+    paths: ['mvm/**','tests/unit/test_mvm.py']
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with: { python-version: '3.10' }
+      - run: pip install torch torchvision einops pytest pytest-cov pyyaml tqdm scikit-learn numpy wandb
+      - env:
+          PYTHONPATH: .
+        run: pytest tests/unit/test_mvm.py -v --cov=mvm
+      - name: Run Training Smoke Test
+        env:
+          PYTHONPATH: .
+        run: python mvm/train.py --config experiments/configs/smoke.yaml
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: pip install flake8 black
+      - run: flake8 mvm/ --max-line-length=100 --extend-ignore=E203,F841,F811,W291
+      - run: black --check mvm/
